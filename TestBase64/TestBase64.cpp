@@ -62,7 +62,7 @@ TEST(CheckBase32EncoderEncodesExactlyOneByte)
 	const std::string unencoded_string("F");
 	std::string encoded_string;
 	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder<std::string, base32>(encoded_string));
-	CHECK_EQUAL(4U, encoded_string.size());
+	CHECK_EQUAL(8U, encoded_string.size());
 	CHECK_EQUAL("IY======", encoded_string);
 }
 
@@ -71,6 +71,25 @@ TEST(CheckBase32EncoderEncodesTwoBytes)
 	const std::string unencoded_string("Fo");
 	std::string encoded_string;
 	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder<std::string, base32>(encoded_string));
-	CHECK_EQUAL(4U, encoded_string.size());
+	CHECK_EQUAL(8U, encoded_string.size());
 	CHECK_EQUAL("IZXQ====", encoded_string);
 }
+
+TEST(CheckBase16EncoderEncodesExactlyOneByte)
+{
+	const std::string unencoded_string("F");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder<std::string, base16>(encoded_string));
+	CHECK_EQUAL(2U, encoded_string.size());
+	CHECK_EQUAL("46", encoded_string);
+}
+
+TEST(CheckBase16EncoderEncodesTwoBytes)
+{
+	const std::string unencoded_string("Fo");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder<std::string, base16>(encoded_string));
+	CHECK_EQUAL(4U, encoded_string.size());
+	CHECK_EQUAL("466F", encoded_string);
+}
+

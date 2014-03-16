@@ -30,8 +30,25 @@ namespace
 		base32& operator=(const base32&) = delete;
 	};
 
-	const char pad = '=';
+	struct base32hex
+	{
+		const std::string alphabet_ = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+		const int shift_ = 5;
+		const int mask_ = 0x1f;
+		const int mod_ = 8;
+		base32hex& operator=(const base32hex&) = delete;
+	};
 
+	struct base16
+	{
+		const std::string alphabet_ = "0123456789ABCDEF";
+		const int shift_ = 4;
+		const int mask_ = 0x0f;
+		const int mod_ = 1;
+		base16& operator=(const base16&) = delete;
+	};
+
+	const char pad = '=';
 
 	template< class Container = std::string, typename Alphabet = base64 >
 	class encoder : Alphabet
@@ -39,7 +56,9 @@ namespace
 	public:
 		encoder(Container& c) 
 			: ref_(c), bits_(0), bits_remaining_(0) { }
-		~encoder() 
+		encoder(encoder&& other) : ref_(other.ref_) {
+		}
+		~encoder()
 		{
 			if (bits_remaining_ > 0)
 			{
@@ -58,9 +77,6 @@ namespace
 				ref_.push_back(pad);
 			}
 		}
-		encoder(encoder&& other) : ref_(other.ref_) {
-		}
-
 		void operator()(unsigned char byte)	
 		{
 			bits_ = (bits_ << 8) | byte;
