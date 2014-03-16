@@ -48,10 +48,29 @@ TEST(CheckEncoderEncodesFourBytes)
 	CHECK_EQUAL("Rm9vYg==", encoded_string);
 }
 
-/*
-BASE32("") = ""
+TEST(CheckEncoderEncodesFourBytesWithAlternateAlphabet)
+{
+	const std::string unencoded_string("Foob");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder<std::string, base64url>(encoded_string));
+	CHECK_EQUAL(8U, encoded_string.size());
+	CHECK_EQUAL("Rm9vYg==", encoded_string);
+}
 
-BASE32("f") = "MY======"
+TEST(CheckBase32EncoderEncodesExactlyOneByte)
+{
+	const std::string unencoded_string("F");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder<std::string, base32>(encoded_string));
+	CHECK_EQUAL(4U, encoded_string.size());
+	CHECK_EQUAL("IY======", encoded_string);
+}
 
-BASE32("fo") = "MZXQ===="
-*/
+TEST(CheckBase32EncoderEncodesTwoBytes)
+{
+	const std::string unencoded_string("Fo");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder<std::string, base32>(encoded_string));
+	CHECK_EQUAL(4U, encoded_string.size());
+	CHECK_EQUAL("IZXQ====", encoded_string);
+}
