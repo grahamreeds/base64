@@ -3,8 +3,19 @@
 
 namespace
 {
-	template< class Container = std::string>
-	class encoder
+
+	struct base64
+	{
+		const std::string alphabet_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+		const int shift_ = 6;
+		const int mask_ = 0x3f;
+		base64& operator=(const base64&) = delete;
+	};
+
+//	const std::string base64::alphabet_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+	template< class Container = std::string, typename Alphabet = base64>
+	class encoder : Alphabet
 	{
 	public:
 		encoder(Container& c) 
@@ -30,6 +41,10 @@ namespace
 			}
 
 		}
+		encoder(encoder&& other) : ref_(other.ref_) {
+//			ref_.push_back('M');
+		}
+
 		void operator()(unsigned char byte)	
 		{
 			bits_ = (bits_ << 8) | byte;
@@ -47,12 +62,13 @@ namespace
 				ref_.push_back(out_byte);
 			}
 		}
-		encoder& operator=(const encoder&) = delete;
 	private:
+		encoder& operator=(const encoder&) = delete;
+		encoder& operator=(const encoder&&) = delete;
+
 		Container&	ref_;
 		int			bits_;
 		int			bits_remaining_;
-		const std::string alphabet_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	};
 }
 /*
