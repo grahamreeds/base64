@@ -50,15 +50,16 @@ namespace
 
 	const char pad = '=';
 
-	template< class Container = std::string, typename Alphabet = base64 >
-	class encoder : Alphabet
+
+	template< class Container, typename Alphabet = base64>
+	class encoder_ : Alphabet
 	{
 	public:
-		encoder(Container& c) 
-			: ref_(c), bits_(0), bits_remaining_(0) { }
-		encoder(encoder&& other) : ref_(other.ref_) {
-		}
-		~encoder()
+		encoder_(Container& ref)
+			: ref_(ref), bits_(0), bits_remaining_(0) { }
+		encoder_(encoder_&& other) 
+			: ref_(other.ref_) { }
+		~encoder_()
 		{
 			if (bits_remaining_ > 0)
 			{
@@ -96,19 +97,91 @@ namespace
 		}
 
 	private:
-		encoder& operator=(const encoder&) = delete;
-		encoder& operator=(const encoder&&) = delete;
+//		encoder_& operator=(const encoder_&) = delete;
+//		encoder_& operator=(const encoder_&&) = delete;
 
 		Container&	ref_;
 		int			bits_;
 		int			bits_remaining_;
 	};
+
+	template< typename Alphabet >
+	struct invalid_data_throw : Alphabet
+	{
+		size_t is_valid(unsigned char ch) const
+		{
+			size_t pos = alphabet_.find(ch);
+			if (pos == std::string::npos)
+			{
+				throw std::runtime_error("Invalid alphabet data in stream");
+			}
+			return pos;
+		}
+	};
+
+	template< typename Alphabet >
+	struct invalid_data_allow : Alphabet
+	{
+		size_t is_valid(unsigned char ch) const
+		{
+			return alphabet_.find(ch);
+		}
+	};
+
+
+	template< class Container = std::string, typename Alphabet = base64, typename InvalidAlphabet = invalid_data_throw<Alphabet> >
+	class decoder : InvalidAlphabet
+	{
+	public:
+		decoder(Container& ref) 
+			: ref_(ref), bits_(0), bits_remaining_(0) { }
+		~decoder() 
+		{ 
+		}
+		void operator()(unsigned char byte) 
+		{
+			if (byte != pad)
+			{
+				size_t indice = is_valid(byte);
+				if (indice != std::string::npos)
+				{
+					bits_ = (bits_ << shift_) | indice;
+					bits_remaining_ += shift_;
+
+					while (bits_remaining_ >= 8)
+					{
+						const int shift = bits_remaining_ - 8;
+						const int mask = 0xff << shift;
+						const int index = (bits_ & mask) >> shift;
+
+						bits_ = bits_ & ~mask;
+						bits_remaining_ -= 8;
+
+						ref_.push_back((char)index);
+					}
+				}
+			}
+		}
+	private:
+		decoder& operator=(const decoder&) = delete;
+		decoder& operator=(const decoder&&) = delete;
+
+		Container&	ref_;
+		int			bits_;
+		int			bits_remaining_;
+	};
+
 }
 
-/*
-template< class Container >
-encoder_<Container> encoder(Container& c)
+
+template< class Container, typename Alphabet = base64 >
+encoder_<Container, Alphabet> encoder(Container& ref)
 {
-	return encoder_<Container>(c);
+	return encoder_<Container, Alphabet>(ref);
 }
-*/
+
+//template< class Container, typename Alphabet = base64 >
+//decoder_<Container, Alphabet> decoder(Container& ref)
+//{
+//	return decoder_<Container, Alphabet>(ref);
+//}
