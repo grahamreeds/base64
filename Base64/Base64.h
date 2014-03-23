@@ -135,13 +135,13 @@ namespace
 	};
 
 
-	template< class OutputIt = std::string, typename Alphabet = base64, typename InvalidAlphabet = invalid_data_throw<Alphabet> >
-	class decoder : InvalidAlphabet
+	template< typename Alphabet, typename InvalidAlphabet, class OutputIt >
+	class decoder_ : InvalidAlphabet
 	{
 	public:
-		decoder(OutputIt& ref) 
+		decoder_(OutputIt& ref) 
 			: ref_(ref), bits_(0), bits_remaining_(0) { }
-		~decoder() 
+		~decoder_() 
 		{ 
 		}
 		void operator()(unsigned char byte) 
@@ -163,31 +163,34 @@ namespace
 						bits_ = bits_ & ~mask;
 						bits_remaining_ -= 8;
 
-						ref_.push_back((char)index);
+						*ref_++ = (char)index;
 					}
 				}
 			}
 		}
 	private:
-		decoder& operator=(const decoder&) = delete;
-		decoder& operator=(const decoder&&) = delete;
+		decoder_& operator=(const decoder_&) = delete;
+		decoder_& operator=(const decoder_&&) = delete;
 
-		OutputIt&	ref_;
+		OutputIt	ref_;
 		int			bits_;
 		int			bits_remaining_;
 	};
 
 }
 
-
-template< typename Alphabet = base64, class OutputIt >
-encoder_<Alphabet, OutputIt> encoder(OutputIt ref)
+namespace encoder
 {
-	return encoder_<Alphabet, OutputIt>(ref);
-}
+	template< typename Alphabet = base64, class OutputIt >
+	encoder_<Alphabet, OutputIt> encode(OutputIt ref)
+	{
+		return encoder_<Alphabet, OutputIt>(ref);
+	}
 
-//template< class OutputIt, typename Alphabet = base64 >
-//decoder_<OutputIt, Alphabet> decoder(OutputIt& ref)
-//{
-//	return decoder_<OutputIt, Alphabet>(ref);
-//}
+	template< typename Alphabet = base64, typename InvalidAlphabet = invalid_data_throw<Alphabet>, class OutputIt >
+	decoder_<Alphabet, InvalidAlphabet, OutputIt> decode(OutputIt ref)
+	{
+		return decoder_<Alphabet, InvalidAlphabet, OutputIt>(ref);
+	}
+
+} // namespace encoder
