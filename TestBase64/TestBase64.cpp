@@ -199,7 +199,7 @@ TEST(CheckDecoderThrowsOnInvalidAlphabetCharacters)
 	std::string decoded_string;
 	CHECK_THROW(std::for_each(encoded_string.cbegin(), encoded_string.cend(), encoder::decode(std::back_inserter(decoded_string))), std::runtime_error);
 }
-//*/
+
 TEST(CheckDecoderCanBeForcedToIgnoreInvalidAlphabetCharacters)
 {
 	const std::string encoded_string(",.");
@@ -218,7 +218,7 @@ TEST(CheckDecoderHandlesZeroByteString)
 	CHECK_EQUAL("", decoded_string);
 }
 
-TEST(CheckDecoderDecodesExactlyOneByte)
+TEST(CheckDecoderDecodesExactlyOneByteOfBase64)
 {
 	const std::string encoded_string("Rg==");
 	std::string decoded_string;
@@ -227,7 +227,7 @@ TEST(CheckDecoderDecodesExactlyOneByte)
 	CHECK_EQUAL("F", decoded_string);
 }
 
-TEST(CheckDecoderDecodesTwoBytes)
+TEST(CheckDecoderDecodesTwoBytesOfBase64)
 {
 	const std::string encoded_string("Rm8=");
 	std::string decoded_string;
@@ -236,7 +236,7 @@ TEST(CheckDecoderDecodesTwoBytes)
 	CHECK_EQUAL("Fo", decoded_string);
 }
 
-TEST(CheckDecoderDecodesThreeBytes)
+TEST(CheckDecoderDecodesThreeBytesOfBase64)
 {
 	const std::string encoded_string("Rm9v");
 	std::string decoded_string;
@@ -245,7 +245,7 @@ TEST(CheckDecoderDecodesThreeBytes)
 	CHECK_EQUAL("Foo", decoded_string);
 }
 
-TEST(CheckDecoderDecodesFourBytes)
+TEST(CheckDecoderDecodesFourBytesOfBase64)
 {
 	const std::string encoded_string("Rm9vYg==");
 	std::string decoded_string;
@@ -253,7 +253,25 @@ TEST(CheckDecoderDecodesFourBytes)
 	CHECK_EQUAL(4U, decoded_string.size());
 	CHECK_EQUAL("Foob", decoded_string);
 }
-//*/
+
+TEST(CheckDecoderDecodesFiveBytesOfBase64)
+{
+	const std::string encoded_string("Rm9vYmE=");
+	std::string decoded_string;
+	std::for_each(encoded_string.cbegin(), encoded_string.cend(), encoder::decode(std::back_inserter(decoded_string)));
+	CHECK_EQUAL(5U, decoded_string.size());
+	CHECK_EQUAL("Fooba", decoded_string);
+}
+
+TEST(CheckDecoderDecodesSixBytesOfBase64)
+{
+	const std::string encoded_string("Rm9vYmFy");
+	std::string decoded_string;
+	std::for_each(encoded_string.cbegin(), encoded_string.cend(), encoder::decode(std::back_inserter(decoded_string)));
+	CHECK_EQUAL(6U, decoded_string.size());
+	CHECK_EQUAL("Foobar", decoded_string);
+}
+
 TEST(CheckDecoderDecodesExactlyOneByteOfBase32)
 {
 	const std::string encoded_string("IY======");
@@ -271,6 +289,25 @@ TEST(CheckDecoderCanDecodesTwoBytesOfBase32)
 	CHECK_EQUAL(2U, decoded_string.size());
 	CHECK_EQUAL("Fo", decoded_string);
 }
+
+TEST(CheckDecoderDecodesExactlyOneByteOfBase16)
+{
+	const std::string encoded_string("46");
+	std::string decoded_string;
+	std::for_each(encoded_string.cbegin(), encoded_string.cend(), encoder::decode<base16>(std::back_inserter(decoded_string)));
+	CHECK_EQUAL(1U, decoded_string.size());
+	CHECK_EQUAL("F", decoded_string);
+}
+
+TEST(CheckDecoderCanDecodesTwoBytesOfBase16)
+{
+	const std::string encoded_string("466F");
+	std::string decoded_string;
+	std::for_each(encoded_string.cbegin(), encoded_string.cend(), encoder::decode<base16>(std::back_inserter(decoded_string)));
+	CHECK_EQUAL(2U, decoded_string.size());
+	CHECK_EQUAL("Fo", decoded_string);
+}
+
 /*
 TEST(CheckDecoderFailsWhenPresentedWithPaddingCharactersTooSoon)
 {
