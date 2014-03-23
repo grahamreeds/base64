@@ -57,7 +57,7 @@ namespace
 	public:
 		encoder_(OutputIt ref)
 			: ref_(ref), bits_(0), bits_remaining_(0), bytes_written_(0), skip_(false) { }
-		encoder_(encoder_&& other) 
+		encoder_(encoder_&& other)
 			: ref_(other.ref_), skip_(true) { }
 		~encoder_()
 		{
@@ -101,8 +101,10 @@ namespace
 		}
 
 	private:
-//		encoder_& operator=(const encoder_&) = delete;
-//		encoder_& operator=(const encoder_&&) = delete;
+//		encoder_(encoder_&) = delete;
+//		encoder_(encoder_&&) = delete;
+		encoder_& operator=(const encoder_&) = delete;
+		encoder_& operator=(const encoder_&&) = delete;
 
 		OutputIt	ref_;
 		int			bits_;

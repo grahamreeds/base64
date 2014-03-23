@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
-//*
-TEST(CheckEncoderHandlesZeroByteString)
+
+TEST(CheckEncoderHandlesZeroByteStrings)
 {
 	const std::string unencoded_string("");
 	std::string encoded_string;
@@ -13,7 +13,7 @@ TEST(CheckEncoderHandlesZeroByteString)
 	CHECK_EQUAL("", encoded_string);
 }
 
-TEST(CheckEncoderEncodesExactlyOneByte)
+TEST(CheckEncoderEncodesExactlyOneByteOfBase64)
 {
 	const std::string unencoded_string("F");
 	std::string encoded_string;
@@ -22,7 +22,7 @@ TEST(CheckEncoderEncodesExactlyOneByte)
 	CHECK_EQUAL("Rg==", encoded_string);
 }
 
-TEST(CheckEncoderEncodesTwoBytes)
+TEST(CheckEncoderEncodesTwoBytesOfBase64)
 {
 	const std::string unencoded_string("Fo");
 	std::string encoded_string;
@@ -31,7 +31,7 @@ TEST(CheckEncoderEncodesTwoBytes)
 	CHECK_EQUAL("Rm8=", encoded_string);
 }
 
-TEST(CheckEncoderEncodesThreeBytes)
+TEST(CheckEncoderEncodesThreeBytesOfBase64)
 {
 	const std::string unencoded_string("Foo");
 	std::string encoded_string;
@@ -40,7 +40,7 @@ TEST(CheckEncoderEncodesThreeBytes)
 	CHECK_EQUAL("Rm9v", encoded_string);
 }
 
-TEST(CheckEncoderEncodesFourBytes)
+TEST(CheckEncoderEncodesFourBytesOfBase64)
 {
 	const std::string unencoded_string("Foob");
 	std::string encoded_string;
@@ -49,13 +49,40 @@ TEST(CheckEncoderEncodesFourBytes)
 	CHECK_EQUAL("Rm9vYg==", encoded_string);
 }
 
-TEST(CheckEncoderEncodesFourBytesWithAlternateAlphabet)
+TEST(CheckEncoderEncodesFiveBytesOfBase64)
 {
-	const std::string unencoded_string("Foob");
+	const std::string unencoded_string("Fooba");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(8U, encoded_string.size());
+	CHECK_EQUAL("Rm9vYmE=", encoded_string);
+}
+
+TEST(CheckEncoderEncodesSixBytesOfBase64)
+{
+	const std::string unencoded_string("Foobar");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(8U, encoded_string.size());
+	CHECK_EQUAL("Rm9vYmFy", encoded_string);
+}
+/*
+TEST(CheckEncoderCanInsertOneByteOfBase64ToString)
+{
+	const std::string unencoded_string("F");
+	std::string encoded_string("AB");
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode(std::inserter(encoded_string, encoded_string.begin())));
+	CHECK_EQUAL(6U, encoded_string.size());
+	CHECK_EQUAL("ARg==B", encoded_string);
+}
+*/
+TEST(CheckEncoderEncodesSixBytesWithAlternateAlphabet)
+{
+	const std::string unencoded_string("Foobar");
 	std::string encoded_string;
 	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode<base64url>(std::back_inserter(encoded_string)));
 	CHECK_EQUAL(8U, encoded_string.size());
-	CHECK_EQUAL("Rm9vYg==", encoded_string);
+	CHECK_EQUAL("Rm9vYmFy", encoded_string);
 }
 
 TEST(CheckBase32EncoderEncodesExactlyOneByte)
@@ -76,6 +103,42 @@ TEST(CheckBase32EncoderEncodesTwoBytes)
 	CHECK_EQUAL("IZXQ====", encoded_string);
 }
 
+TEST(CheckBase32EncoderEncodesThreeBytes)
+{
+	const std::string unencoded_string("Foo");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode<base32>(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(8U, encoded_string.size());
+	CHECK_EQUAL("IZXW6===", encoded_string);
+}
+
+TEST(CheckBase32EncoderEncodesFourBytes)
+{
+	const std::string unencoded_string("Foob");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode<base32>(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(8U, encoded_string.size());
+	CHECK_EQUAL("IZXW6YQ=", encoded_string);
+}
+
+TEST(CheckBase32EncoderEncodesFiveBytes)
+{
+	const std::string unencoded_string("Fooba");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode<base32>(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(8U, encoded_string.size());
+	CHECK_EQUAL("IZXW6YTB", encoded_string);
+}
+
+TEST(CheckBase32EncoderEncodesSixBytes)
+{
+	const std::string unencoded_string("Foobar");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode<base32>(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(16U, encoded_string.size());
+	CHECK_EQUAL("IZXW6YTBOI======", encoded_string);
+}
+
 TEST(CheckBase16EncoderEncodesExactlyOneByte)
 {
 	const std::string unencoded_string("F");
@@ -94,6 +157,41 @@ TEST(CheckBase16EncoderEncodesTwoBytes)
 	CHECK_EQUAL("466F", encoded_string);
 }
 
+TEST(CheckBase16EncoderEncodesThreeBytes)
+{
+	const std::string unencoded_string("Foo");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode<base16>(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(6U, encoded_string.size());
+	CHECK_EQUAL("466F6F", encoded_string);
+}
+
+TEST(CheckBase16EncoderEncodesFourBytes)
+{
+	const std::string unencoded_string("Foob");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode<base16>(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(8U, encoded_string.size());
+	CHECK_EQUAL("466F6F62", encoded_string);
+}
+
+TEST(CheckBase16EncoderEncodesFiveBytes)
+{
+	const std::string unencoded_string("Fooba");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode<base16>(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(10U, encoded_string.size());
+	CHECK_EQUAL("466F6F6261", encoded_string);
+}
+
+TEST(CheckBase16EncoderEncodesSixBytes)
+{
+	const std::string unencoded_string("Foobar");
+	std::string encoded_string;
+	std::for_each(unencoded_string.cbegin(), unencoded_string.cend(), encoder::encode<base16>(std::back_inserter(encoded_string)));
+	CHECK_EQUAL(12U, encoded_string.size());
+	CHECK_EQUAL("466F6F626172", encoded_string);
+}
 
 TEST(CheckDecoderThrowsOnInvalidAlphabetCharacters)
 {
