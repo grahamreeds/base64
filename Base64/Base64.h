@@ -51,16 +51,17 @@ namespace
 	const char pad = '=';
 
 
-	template< class Container, typename Alphabet = base64>
+	template< typename Alphabet, class OutputIt >
 	class encoder_ : Alphabet
 	{
 	public:
-		encoder_(Container& ref)
-			: ref_(ref), bits_(0), bits_remaining_(0) { }
+		encoder_(OutputIt ref)
+			: ref_(ref), bits_(0), bits_remaining_(0), bytes_written_(0), skip_(false) { }
 		encoder_(encoder_&& other) 
-			: ref_(other.ref_) { }
+			: ref_(other.ref_), skip_(true) { }
 		~encoder_()
 		{
+			if (skip_) return;
 			if (bits_remaining_ > 0)
 			{
 				bits_ = (bits_ << 8); // | 0x00;
@@ -71,11 +72,13 @@ namespace
 				const int index = (bits_ & mask) >> shift;
 
 				const char out_byte = alphabet_[index];
-				ref_.push_back(out_byte);
+				*ref_++ = out_byte;
+				bytes_written_++;
 			}
-			while (ref_.size() % mod_)
+			while (bytes_written_ % mod_)
 			{
-				ref_.push_back(pad);
+				*ref_++ = pad;
+				bytes_written_++;
 			}
 		}
 		void operator()(unsigned char byte)	
@@ -92,7 +95,8 @@ namespace
 				bits_remaining_ -= shift_;
 
 				const char out_byte = alphabet_[index];
-				ref_.push_back(out_byte);
+				*ref_++ = out_byte;
+				bytes_written_++;
 			}
 		}
 
@@ -100,9 +104,11 @@ namespace
 //		encoder_& operator=(const encoder_&) = delete;
 //		encoder_& operator=(const encoder_&&) = delete;
 
-		Container&	ref_;
+		OutputIt	ref_;
 		int			bits_;
 		int			bits_remaining_;
+		int			bytes_written_;
+		bool		skip_;
 	};
 
 	template< typename Alphabet >
@@ -129,11 +135,11 @@ namespace
 	};
 
 
-	template< class Container = std::string, typename Alphabet = base64, typename InvalidAlphabet = invalid_data_throw<Alphabet> >
+	template< class OutputIt = std::string, typename Alphabet = base64, typename InvalidAlphabet = invalid_data_throw<Alphabet> >
 	class decoder : InvalidAlphabet
 	{
 	public:
-		decoder(Container& ref) 
+		decoder(OutputIt& ref) 
 			: ref_(ref), bits_(0), bits_remaining_(0) { }
 		~decoder() 
 		{ 
@@ -166,7 +172,7 @@ namespace
 		decoder& operator=(const decoder&) = delete;
 		decoder& operator=(const decoder&&) = delete;
 
-		Container&	ref_;
+		OutputIt&	ref_;
 		int			bits_;
 		int			bits_remaining_;
 	};
@@ -174,14 +180,14 @@ namespace
 }
 
 
-template< class Container, typename Alphabet = base64 >
-encoder_<Container, Alphabet> encoder(Container& ref)
+template< typename Alphabet = base64, class OutputIt >
+encoder_<Alphabet, OutputIt> encoder(OutputIt ref)
 {
-	return encoder_<Container, Alphabet>(ref);
+	return encoder_<Alphabet, OutputIt>(ref);
 }
 
-//template< class Container, typename Alphabet = base64 >
-//decoder_<Container, Alphabet> decoder(Container& ref)
+//template< class OutputIt, typename Alphabet = base64 >
+//decoder_<OutputIt, Alphabet> decoder(OutputIt& ref)
 //{
-//	return decoder_<Container, Alphabet>(ref);
+//	return decoder_<OutputIt, Alphabet>(ref);
 //}
